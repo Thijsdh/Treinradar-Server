@@ -9,12 +9,24 @@ const init = async () => {
   const server = Hapi.server({
     port: process.env.PORT || 3000,
     host: process.env.HOST || 'localhost',
+    debug: false,
   });
 
-  server.route(vehicles);
+  server.route(vehicles(server));
+
+  await server.register({
+    plugin: require('hapi-pino'),
+    options: {
+      transport:
+        process.env.NODE_ENV === 'development'
+          ? {
+              target: 'pino-pretty',
+            }
+          : undefined,
+    },
+  });
 
   await server.start();
-  console.log(`Server running on ${server.info.uri}`);
 };
 
 process.on('unhandledRejection', (err) => {
